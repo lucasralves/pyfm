@@ -1,4 +1,3 @@
-from abc import ABC, abstractclassmethod
 import sys
 from typing import List
 import numpy as np
@@ -6,48 +5,10 @@ import matplotlib.pyplot as plt
 from scipy.interpolate import splprep, splev, interp1d
 import gmsh
 
-##################################################################
-##################################################################
+from pyfm.utils.airfoil_mesh_abs import AirfoilMeshAbs
 
-class _airfoil_mesh_abs(ABC):
-    """
-    Creates a mesh around and airfoil.
 
-    Parameters
-    ----------
-    - ns: number of points on the profile surface.
-    - nt: number of points on the trailing edge.
-    - nf: number of layers in the boundary layer.
-    - delta: boundary layer height.
-    - exp1: expansion ratio of points on the surface towards the leading edge.
-    - exp2: expansion ratio of points on the surface towards the trailing edge.
-    - exp3: boundary layer expansion ratio.
-    - ext_radius: outer countor radius.
-    - cell_ratio: ratio between the size of the element on the outer counter and on the
-      surface of the boundary layer.
-    """
-    def __init__(self, file: str = None, ns: int = None, nt: int = None, nf: int = None, delta: float = None, exp1: float = None, exp2: float = None, exp3: float = None, ext_radius: float = None, cell_ratio: float = None) -> None:
-        ...
-
-    @abstractclassmethod
-    def build_surface(self, file: str = None, ns: int = None, nt: int = None, exp1: float = None, exp2: float = None) -> None:
-        """Divide the surface into ns elements"""
-        ...
-    
-    @abstractclassmethod
-    def show_surface(self) -> None:
-        """Show a plot of the surface with the grid points"""
-        ...
-    
-    @abstractclassmethod
-    def build_mesh(self) -> None:
-        """Create the mesh"""
-        ...
-
-##################################################################
-##################################################################
-
-class airfoil_mesh(_airfoil_mesh_abs):
+class _AirfoilMeshImpl(AirfoilMeshAbs):
 
     def __init__(self, file: str = None,
                        ns: int = None, nt: int = None, nf: int = None,
@@ -84,7 +45,7 @@ class airfoil_mesh(_airfoil_mesh_abs):
         if exp2 is not None: self.exp2 = exp2
 
         # Load
-        self.foil = np.loadtxt(file)
+        self.foil = np.loadtxt(self.file)
 
         # Redefine
         self.foil = self._redefine(self.foil)
@@ -112,14 +73,14 @@ class airfoil_mesh(_airfoil_mesh_abs):
                          delta: float = None,
                          exp3: float = None,
                          ext_radius: float = None,
-                         ext_cell_ratio: float = None) -> None:
+                         ext_cell_size: float = None) -> None:
         """Creates the mesh"""
 
         if nf is not None: self.nf = nf
         if delta is not None: self.delta = delta
         if exp3 is not None: self.exp3 = exp3
         if ext_radius is not None: self.ext_radius = ext_radius
-        if ext_cell_ratio is not None: self.ext_cell_ratio = ext_cell_ratio
+        if ext_cell_size is not None: self.ext_cell_size = ext_cell_size
 
         # Layers
         X, Y = self._calc_layers(self.foil)
